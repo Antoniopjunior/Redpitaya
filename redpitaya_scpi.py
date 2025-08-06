@@ -2012,3 +2012,9 @@ class scpi (object):
     def err_n(self):
         """Error next."""
         return self.txrx_txt('SYST:ERR:NEXT?')
+
+    def ler_canal(canal):
+        rp_s.tx_txt(f'ACQ:SOUR{canal}:DADOS?')
+        raw = rp_s.rx_txt()
+        raw = raw.split('{}\n\r').replace(" ", "").split(',')
+        return np.array(list(map(float, raw)))
