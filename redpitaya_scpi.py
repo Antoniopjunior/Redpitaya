@@ -2014,7 +2014,7 @@ class scpi (object):
         return self.txrx_txt('SYST:ERR:NEXT?')
 
     def ler_canal(canal):
-        rp_s.tx_txt(f'ACQ:SOUR{canal}:DADOS?')
-        raw = rp_s.rx_txt()
+        self.tx_txt(f'ACQ:SOUR{canal}:DADOS?')
+        raw = self.rx_txt()
         raw = raw.split('{}\n\r').replace(" ", "").split(',')
         return np.array(list(map(float, raw)))
