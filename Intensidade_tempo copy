@@ -21,11 +21,11 @@ rp_s.tx_txt('ACQ:DATA:UNITS VOLTS')
 rp_s.tx_txt('ACQ:TRIG:LEV 0')
 rp_s.tx_txt('ACQ:TRIG:DLY 0')
 
-def ler_canal(canal):
-    rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
-    raw = rp_s.rx_txt()
-    raw = raw.strip('{}\n\r').replace("  ", "").split(',')
-    return np.array(list(map(float, raw)))
+# def ler_canal(canal):
+    # rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
+    # raw = rp_s.rx_txt()
+    # raw = raw.strip('{}\n\r').replace("  ", "").split(',')
+    # return np.array(list(map(float, raw)))
 
 # Listas para armazenar dados
 tempos = []
@@ -67,7 +67,7 @@ while time.time() - start_time < tempo_total_segundos:
         rms_values = []
         
         for canal in range(4):
-            sinal = ler_canal(canal+1)
+            sinal = rp_s.ler_canal(canal+1)
             sinal1 = np.array(sinal)
             intensidade = np.sqrt(np.mean(sinal1**2))
             intensidades[canal].append(intensidade)
@@ -113,4 +113,5 @@ for canal in range(4):
 
 # Ajusta o layout para evitar sobreposição
 plt.tight_layout()
+
 plt.show()
