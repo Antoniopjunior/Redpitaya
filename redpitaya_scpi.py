@@ -2012,3 +2012,22 @@ class scpi (object):
     def err_n(self):
         """Error next."""
         return self.txrx_txt('SYST:ERR:NEXT?')
+    
+    def ler_canal(self, canal):
+        
+        #leitura dos canais um a um
+        self.tx_txt(f'ACQ:SOUR{canal}:DATA?')
+        raw = self.rx_txt()
+        raw = raw.strip('{}\n\r').replace("  ", "").split(',')
+        return np.array(list(map(float, raw)))
+
+    def __configure__(self):
+
+        # Configuração inicial do Red Pitaya
+        self.tx_txt('ACQ:RST')
+        self.tx_txt('ACQ:DEC 1')
+        self.tx_txt('ACQ:DATA:FORMAT ASCII')
+        self.tx_txt('ACQ:DATA:UNITS VOLTS')
+        self.tx_txt('ACQ:TRIG:LEV 0')
+        self.tx_txt('ACQ:TRIG:DLY 0')
+
