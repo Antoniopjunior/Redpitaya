@@ -24,11 +24,11 @@ rp_s.tx_txt('ACQ:TRIG:DLY 0')
 # Função para ler dados de um canal
 
 
-def ler_canal(canal):
-    rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
-    raw = rp_s.rx_txt()
-    raw = raw.strip('{}\n\r').replace("  ", "").split(',')
-    return np.array(list(map(float, raw)))
+# def ler_canal(canal):
+#     rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
+#     raw = rp_s.rx_txt()
+#     raw = raw.strip('{}\n\r').replace("  ", "").split(',')
+#     return np.array(list(map(float, raw)))
 
 
 # Listas para armazenar todos os dados
@@ -60,10 +60,10 @@ while time.time() - start_time < tempo_total_segundos:
             break
 
     # Lê os dados dos 4 canais
-    buff1 = ler_canal(1)
-    buff2 = ler_canal(2)
-    buff3 = ler_canal(3)
-    buff4 = ler_canal(4)
+    buff1 = rp_s.ler_canal(1)
+    buff2 = rp_s.ler_canal(2)
+    buff3 = rp_s.ler_canal(3)
+    buff4 = rp_s.ler_canal(4)
 
     # Eixo de tempo (assumindo sample rate de 125 MHz)
     sample_rate=125e6
@@ -109,3 +109,4 @@ for i, leitura in enumerate(todas_as_leituras):
 
 plt.tight_layout()
 plt.show()  # Exibe tudo de uma vez
+
