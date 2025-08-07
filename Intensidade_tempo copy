@@ -14,18 +14,7 @@ tempo_total_segundos = 10
 intervalo_segundos = 1
 
 # Configuração inicial do Red Pitaya
-rp_s.tx_txt('ACQ:RST')
-rp_s.tx_txt('ACQ:DEC 1')
-rp_s.tx_txt('ACQ:DATA:FORMAT ASCII')
-rp_s.tx_txt('ACQ:DATA:UNITS VOLTS')
-rp_s.tx_txt('ACQ:TRIG:LEV 0')
-rp_s.tx_txt('ACQ:TRIG:DLY 0')
-
-def ler_canal(canal):
-    rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
-    raw = rp_s.rx_txt()
-    raw = raw.strip('{}\n\r').replace("  ", "").split(',')
-    return np.array(list(map(float, raw)))
+rp_s.__configure__()
 
 # Listas para armazenar dados
 tempos = []
@@ -40,10 +29,10 @@ next_acquisition = start_time
 
 while time.time() - start_time < tempo_total_segundos:
     now = time.time()
-    
+
     if now >= next_acquisition:
         tempo_atual = time.time() - start_time
-        
+
         # Dispara aquisição
         rp_s.tx_txt('ACQ:START')
         rp_s.tx_txt('ACQ:TRIG CH1_PE')
@@ -65,49 +54,50 @@ while time.time() - start_time < tempo_total_segundos:
         # Lê e processa todos os 4 canais
         tempos.append(tempo_atual)
         rms_values = []
-        
+
         for canal in range(4):
-            sinal = ler_canal(canal+1)
+            sinal = rp_s.ler_canal(canal+1)
             sinal1 = np.array(sinal)
             intensidade = np.sqrt(np.mean(sinal1**2))
             intensidades[canal].append(intensidade)
-            
-        
+
         # Print no terminal
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Tempo: {tempo_atual:.2f}s | " +
               " | ".join([f"{labels[i]}: {intensidades[i][-1]:.4f}V RMS" for i in range(4)]))
-        
+
         next_acquisition += intervalo_segundos
 
     time.sleep(0.01)
 
 # Configuração do plot com 4 subgráficos
 plt.figure(figsize=(14, 10))
-plt.suptitle('Intensidade RMS em Função do Tempo - 4 Canais', fontsize=14, y=1.02)
+plt.suptitle('Intensidade RMS em Função do Tempo - 4 Canais',
+             fontsize=14, y=1.02)
 
 for canal in range(4):
     plt.subplot(2, 2, canal+1)
-    plt.plot(tempos, intensidades[canal], 
+    plt.plot(tempos, intensidades[canal],
              color=cores[canal],
              marker=markers[canal],
              linestyle='-',
              linewidth=1.5,
              markersize=5,
              label=labels[canal])
-    
-    #plt.ylim (0,0.5)
+
+    # plt.ylim (0,0.5)
     plt.title(labels[canal], fontsize=12)
     plt.xlabel('Tempo (s)', fontsize=10)
     plt.ylabel('Intensidade (V RMS)', fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.7)
-    
+
     # Ajuste automático dos limites do eixo y com margem de 10%
     if intensidades[canal]:
         global_max = max(max(channel) for channel in intensidades if channel)
         global_min = min(min(channel) for channel in intensidades if channel)
-        margin = 0.1 * (global_max - global_min) if (global_max - global_min) > 0 else 0.1
+        margin = 0.1 * (global_max - global_min) if (global_max -
+                                                     global_min) > 0 else 0.1
         plt.ylim(global_min - margin, global_max+margin)
-    
+
     # Adiciona legenda
     plt.legend(loc='upper right', fontsize=9)
 
