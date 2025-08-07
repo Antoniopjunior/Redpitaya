@@ -10,24 +10,11 @@ IP = '169.254.56.223'
 rp_s = scpi.scpi(IP)
 
 # Parâmetros de aquisição
-tempo_total_segundos = 20
-intervalo_segundos = 2
+tempo_total_segundos = 600
+intervalo_segundos = 5
 
 # Configuração inicial do Red Pitaya
-rp_s.tx_txt('ACQ:RST')
-rp_s.tx_txt('ACQ:DEC 1')
-rp_s.tx_txt('ACQ:DATA:FORMAT ASCII')
-rp_s.tx_txt('ACQ:DATA:UNITS VOLTS')
-rp_s.tx_txt('ACQ:TRIG:LEV 0')
-rp_s.tx_txt('ACQ:TRIG:DLY 0')
-
-
-def ler_canal(canal):
-    rp_s.tx_txt(f'ACQ:SOUR{canal}:DATA?')
-    raw = rp_s.rx_txt()
-    raw = raw.strip('{}\n\r').replace("  ", "").split(',')
-    return np.array(list(map(float, raw)))
-
+rp_s.__configure__()
 
 # Listas para armazenar todos os dados
 todas_as_leituras = []
@@ -64,10 +51,10 @@ while time.time() - start_time < tempo_total_segundos:
                 break
 
         # Lê dados
-        buff1 = ler_canal(1)
-        buff2 = ler_canal(2)
-        buff3 = ler_canal(3)
-        buff4 = ler_canal(4)
+        buff1 = rp_s.ler_canal(1)
+        buff2 = rp_s.ler_canal(2)
+        buff3 = rp_s.ler_canal(3)
+        buff4 = rp_s.ler_canal(4)
 
         # Eixo de tempo
         sample_rate = 125e6
