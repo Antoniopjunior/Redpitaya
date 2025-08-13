@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import time
-import sys
+# import sys
 import redpitaya_scpi as scpi
 import matplotlib.pyplot as plt
 import numpy as np

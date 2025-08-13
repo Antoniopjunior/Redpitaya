@@ -15,6 +15,10 @@ intervalo_segundos = 0.000131    # Intervalo entre aquisições
 
 # Configuração inicial do Red Pitaya
 rp_s.__configure__()
+<<<<<<< HEAD:plotandoladoalado.py
+=======
+
+>>>>>>> a31607d (organização da pasta de testes e padronização dos tipos dos documentos):testes/plotandoladoalado.py
 
 # Listas para armazenar todos os dados
 todas_as_leituras = []  # Armazena cada aquisição como um dicionário
