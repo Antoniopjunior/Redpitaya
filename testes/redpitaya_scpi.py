@@ -2031,8 +2031,13 @@ class scpi (object):
         self.tx_txt('ACQ:TRIG:LEV 0')
         self.tx_txt('ACQ:TRIG:DLY 0')
         
-    # def spectrumAnalyzerConf(self, dec, trig):
-    #     self.tx_txt('ACQ:RST')
-    #     self.tx_txt(f'ACQ:DEC {dec}')
-    #     self.tx_txt(f'ACQ:TRIG:LEV {trig}')
-    #     self.tx_txt('ACQ:START')
+    def spectrumAnalyzerConf(self, dec, trig):
+        self.tx_txt('ACQ:RST')
+        self.tx_txt(f'ACQ:DEC {dec}')
+        self.tx_txt(f'ACQ:TRIG:LEV {trig}')
+        self.tx_txt('ACQ:START')
+        
+    def __configure_osc__(self):
+        self.tx_txt('ACQ:RST')
+        self.tx_txt('ACQ:DATA:FORMAT ASCII')
+        self.tx_txt('ACQ:DATA:UNITS VOLTS')
