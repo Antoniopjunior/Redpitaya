@@ -13,11 +13,15 @@ tempo_total_segundos = 10
 intervalo_segundos = 1
 sample_rate = 125e6
 ts = 1 / sample_rate
+canal = 1 # digite o n° (de 1 a 4) do canal desejado
 
-# Configuração inicial do RBW
+# Configuração inicial do RBW e atenuacao
 RBW = 100e3  # 100 kHz de RBW inicial
 MIN_RBW = 1e3  # 1 kHz - mínimo RBW
 MAX_RBW = 1e6  # 1 MHz - máximo RBW
+atenuacao = 0 # digite a atenuação desejada
+MIN_ATT = 0
+MAX_ATT = 20
 
 # Configuração inicial
 rp_s.__configure__()
@@ -25,7 +29,7 @@ rp_s.__configure__()
 # Configuração do gráfico
 plt.ion()
 fig, ax = plt.subplots(figsize=(15, 7))
-fig.suptitle(f'Spectrum Analyzer - RBW: {RBW/1e3:.1f} kHz', fontsize=16)
+fig.suptitle(f'Spectrum Analyzer | Canal {canal}\nRBW: {RBW/1e3:.1f} kHz| Atenuação: {atenuacao}', fontsize=16)
 
 # Linha do espectro
 line, = ax.plot([], [], 'b', label='Espectro')
@@ -57,6 +61,18 @@ def calcular_fft(sinal, rbw):
     
     return fft_freq, fft_db
 
+def set_attenuation(canal, att_db):
+    #Configura a atenuação para um canal específico
+    if att_db >= MIN_ATT and att_db <= MAX_ATT:
+        rp_s.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
+        atenuacao = att_db
+        return True
+    else:
+        print(f"Atenuação {att_db}dB não suportada.")
+        return False
+        
+
+
 start_time = time.time()
 next_acquisition = start_time
 
@@ -66,7 +82,7 @@ try:
             print(f"\nAquisição em {datetime.now().strftime('%H:%M:%S')} - RBW: {RBW/1e3:.1f} kHz")
             
             rp_s.tx_txt('ACQ:START')
-            rp_s.tx_txt('ACQ:TRIG CH1_PE')
+            rp_s.tx_txt(f'ACQ:TRIG CH{canal}_PE')
             
             # Espera trigger
             trigger_timeout = time.time() + 0.5
@@ -75,8 +91,8 @@ try:
                 if rp_s.rx_txt() == 'TD' or time.time() > trigger_timeout:
                     break
             
-            # Adquire dados do canal 1
-            data = rp_s.ler_canal(1)
+            # Adquire dados do canal
+            data = rp_s.ler_canal(canal)
             
             # Calcula FFT com RBW atual
             freq, fft_db = calcular_fft(data, RBW)
