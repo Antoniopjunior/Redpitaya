@@ -4,8 +4,9 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import RedpitayaMath as rpmath
 
-IP = '10.42.0.25'
+IP = '10.42.0.25' # SO Windows: 169.254.56.223 | SO Linux Ubuntu: 10.4.0.25
 rp_s = scpi.scpi(IP)
 
 # Parâmetros
@@ -43,42 +44,12 @@ ax.legend()
 
 plt.tight_layout()
 
-def calcular_fft(sinal, rbw):
-    n = len(sinal)
-    
-    # Calcula o tamanho necessário da FFT para atingir a RBW desejada
-    n_rbw = int(sample_rate / rbw)
-    n_rbw = min(n_rbw, n)  # Não pode ser maior que o buffer
-    n_rbw = max(n_rbw, 2)  # Pelo menos 2 pontos
-    
-    # Recorta o sinal para o novo tamanho
-    sinal_recortado = sinal[:n_rbw]
-    
-    window = np.hanning(n_rbw)
-    fft_result = np.fft.fft(sinal_recortado * window)
-    fft_freq = np.fft.fftfreq(n_rbw, d=ts)[:n_rbw//2]
-    fft_db = 20 * np.log10(np.abs(fft_result[:n_rbw//2]) + 1e-10)
-    
-    return fft_freq, fft_db
-
-def set_attenuation(canal, att_db):
-    #Configura a atenuação para um canal específico
-    if att_db >= MIN_ATT and att_db <= MAX_ATT:
-        rp_s.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
-        atenuacao = att_db
-        return True
-    else:
-        print(f"Atenuação {att_db}dB não suportada.")
-        return False
-        
-
-
 start_time = time.time()
 next_acquisition = start_time
 
 try:
     
-    set_attenuation(canal, atenuacao) # aplicação da atenuação
+    rp_s.set_attenuation(canal, atenuacao) # aplicação da atenuação
     
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
@@ -98,15 +69,13 @@ try:
             data = rp_s.ler_canal(canal)
             
             # Calcula FFT com RBW atual
-            freq, fft_db = calcular_fft(data, RBW)
+            freq, fft_db = rpmath.calcular_fft(data, RBW)
             
             # Atualiza gráfico
             line.set_data(freq/1e6, fft_db)
             fig.canvas.flush_events()
             next_acquisition += intervalo_segundos
             
-        
-        
         plt.pause(0.05)
 
 except KeyboardInterrupt:

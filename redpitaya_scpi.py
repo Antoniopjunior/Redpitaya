@@ -2030,9 +2030,17 @@ class scpi (object):
         self.tx_txt('ACQ:DATA:UNITS VOLTS')
         self.tx_txt('ACQ:TRIG:LEV 0')
         self.tx_txt('ACQ:TRIG:DLY 0')
+    
+    def set_attenuation(self, canal, att_db):
+    #Configura a atenuação para um canal específico
+    
+        MIN_ATT = 0
+        MAX_ATT = 20
         
-    # def spectrumAnalyzerConf(self, dec, trig):
-    #     self.tx_txt('ACQ:RST')
-    #     self.tx_txt(f'ACQ:DEC {dec}')
-    #     self.tx_txt(f'ACQ:TRIG:LEV {trig}')
-    #     self.tx_txt('ACQ:START')
+        if att_db >= MIN_ATT and att_db <= MAX_ATT:
+            self.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
+            atenuacao = att_db
+            return True
+        else:
+            print(f"Atenuação {att_db}dB não suportada.")
+            return False

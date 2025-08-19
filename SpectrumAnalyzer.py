@@ -4,8 +4,9 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import RedpitayaMath as rpmath
 
-IP = '10.42.0.25'
+IP = '10.42.0.25' # SO Windows: 169.254.56.223 | SO Linux Ubuntu: 10.4.0.25
 rp_s = scpi.scpi(IP)
 
 # Parâmetros
@@ -49,35 +50,6 @@ for i in range(4):
 
 plt.tight_layout()
 
-def calcular_fft(sinal, rbw):
-    n = len(sinal)
-    
-    # Calcula o tamanho necessário da FFT para atingir a RBW desejada
-    n_rbw = int(sample_rate / rbw)
-    n_rbw = min(n_rbw, n)  # não pode ser maior que o buffer
-    n_rbw = max(n_rbw, 2)  # pelo menos 2 pontos
-    
-    # Recorta o sinal para o novo tamanho
-    sinal_recortado = sinal[:n_rbw] 
-    
-    window = np.hanning(n_rbw)
-    fft_result = np.fft.fft(sinal_recortado * window)
-    fft_freq = np.fft.fftfreq(n_rbw, d=ts)[:n_rbw//2]
-    fft_db = 20 * np.log10(np.abs(fft_result[:n_rbw//2]) + 1e-10)
-    
-    return fft_freq, fft_db
-
-def set_attenuation(channel, att_db):
-    """Configura a atenuação para um canal específico"""
-    if att_db in ATENUACAO_OPCOES:
-        # Na Red Pitaya, LV = 0dB (baixa tensão), HV = 20dB (alta tensão)
-        rp_s.tx_txt(f'ACQ:SOUR{channel}:GAIN {"LV" if att_db == 0 else "HV"}')
-        atenuacao[channel-1] = att_db
-        return True
-    else:
-        print(f"Atenuação {att_db}dB não suportada.")
-        return False
-
 def atualizar_rbw(nova_rbw):
     """Atualiza o valor de RBW"""
     global RBW
@@ -96,7 +68,7 @@ try:
     
     # Configura atenuação inicial
     for ch in range(4):
-        set_attenuation(ch+1, atenuacao[ch])
+        rp_s.set_attenuation(ch+1, atenuacao[ch])
     
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
@@ -116,7 +88,7 @@ try:
             for ch in range(4):
                 data = rp_s.ler_canal(ch+1)
                 
-                freq, fft_db = calcular_fft(data, RBW)
+                freq, fft_db = rpmath.calcular_fft(data, RBW)
                 if frequencias is None:
                     frequencias = freq
                 
@@ -137,7 +109,7 @@ try:
                     parts = cmd.split()
                     canal = int(parts[1])
                     att = int(parts[2])
-                    if 1 <= canal <= 4 and set_attenuation(canal, att):
+                    if 1 <= canal <= 4 and rp_s.set_attenuation(canal, att):
                         print(f"Atenuação do CH{canal} alterada para {att}dB")
                     else:
                         print("Canal inválido (1-4) ou atenuação não suportada")

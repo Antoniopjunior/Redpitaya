@@ -4,6 +4,7 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import RedpitayaMath as rpmath
 
 IP = '10.42.0.25' # SO Windows: 169.254.56.223 | SO Linux Ubuntu: 10.4.0.25
 rp_s = scpi.scpi(IP)
@@ -58,39 +59,12 @@ ax_spec.legend()
 
 plt.tight_layout()
 
-def calcular_fft(sinal, rbw):
-    #Calcular a FFT com RBW específica
-    n = len(sinal)
-    n_rbw = int(sample_rate / rbw)
-    n_rbw = min(n_rbw, n)
-    n_rbw = max(n_rbw, 2)
-    
-    sinal_recortado = sinal[:n_rbw]
-    window = np.hanning(n_rbw)
-    fft_result = np.fft.fft(sinal_recortado * window)
-    fft_freq = np.fft.fftfreq(n_rbw, d=ts)[:n_rbw//2]
-    fft_db = 20 * np.log10(np.abs(fft_result[:n_rbw//2]) + 1e-10)
-    return fft_freq, fft_db, sinal_recortado
-
 def atualizar_rbw(nova_rbw):
     # Atualiza o valor de RBW e o titulo do gráfico
     global RBW
     RBW = max(MIN_RBW, min(nova_rbw, MAX_RBW))
     fig.suptitle(f'Osciloscópio e Spectrum Analyzer - Canal {canal}\nRBW: {RBW/1e3:.1f} kHz | Atenuação: {atenuacao}dB', fontsize=16)
     print(f"\nRBW alterada para: {RBW/1e3:.1f} kHz")
-
-def set_attenuation(canal, att_db):
-    # Configura a atenuação para o canal
-    global atenuacao
-    if ATT_MIN <= att_db <= ATT_MAX:
-        rp_s.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
-        atenuacao = att_db
-        fig.suptitle(f'Osciloscópio e Spectrum Analyzer - Canal {canal}\nRBW: {RBW/1e3:.1f} kHz | Atenuação: {atenuacao}dB', fontsize=16)
-        print(f"Atenuação alerada para: {att_db}dB")
-        return True
-    else:
-        print(f"Atenuação {att_db}dB não suportada. Use valores entre {ATT_MIN} e {ATT_MAX} dB")
-        return False
 
 start_time = time.time()
 next_acquisition = start_time
@@ -100,7 +74,7 @@ try:
     print("Digite 'rbw X' para alterar a RBW para X kHz (ex: 'att 20')")
     print("Digite 'att X' para alterar a atenuação para X dB (ex: 'att 20')")
     
-    set_attenuation(canal, atenuacao)
+    rp_s.set_attenuation(canal, atenuacao)
     
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
@@ -127,6 +101,12 @@ try:
             ax_osc.relim()
             ax_osc.autoscale_view(True, True, True)
             
+            fft_freq, fft_db, sinal_recortado = rpmath.calcular_fft(data, RBW)
+            
+            line_spec.set_data(fft_freq/1e6, fft_db)  # Converte para MHz
+            ax_spec.relim()
+            ax_spec.autoscale_view(True, True, True)
+            
             fig.canvas.flush_events()
             next_acquisition = time.time() + tempo_atualizacao
             
@@ -142,7 +122,7 @@ try:
             elif cmd.startswith('att'):
                 try:
                     nova_attenuacao = float(cmd.split()[1])
-                    set_attenuation(nova_attenuacao)
+                    rp_s.set_attenuation(nova_attenuacao)
                 except:
                     print("Formato inválido. Use 'att X' (ex: 'att 20')")
 

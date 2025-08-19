@@ -4,8 +4,9 @@ import redpitaya_scpi as scpi
 import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
+import RedpitayaMath as rpmath
 
-IP = '10.42.0.25'
+IP = '10.42.0.25' # SO Windows: 169.254.56.223 | SO Linux Ubuntu: 10.4.0.25
 rp_s = scpi.scpi(IP)
 
 # Parâmetros
@@ -64,20 +65,6 @@ for i in range(4):
 
 plt.tight_layout()
 
-def calcular_fft(sinal, rbw):
-    """Calcula a FFT com RBW específica"""
-    n = len(sinal)
-    n_rbw = int(sample_rate / rbw)
-    n_rbw = min(n_rbw, n)
-    n_rbw = max(n_rbw, 2)
-    
-    sinal_recortado = sinal[:n_rbw]
-    window = np.hanning(n_rbw)
-    fft_result = np.fft.fft(sinal_recortado * window)
-    fft_freq = np.fft.fftfreq(n_rbw, d=ts)[:n_rbw//2]
-    fft_db = 20 * np.log10(np.abs(fft_result[:n_rbw//2]) + 1e-10)
-    return fft_freq, fft_db, sinal_recortado
-
 
 def atualizar_rbw(nova_rbw):
     """Atualiza o valor de RBW e o título do gráfico"""
@@ -85,16 +72,6 @@ def atualizar_rbw(nova_rbw):
     RBW = max(MIN_RBW, min(nova_rbw, MAX_RBW))
     fig.suptitle(f'Osciloscópio e Spectrum Analyzer - RBW: {RBW/1e3:.1f} kHz', fontsize=16)
     print(f"\nRBW alterada para: {RBW/1e3:.1f} kHz")
-
-def set_attenuation(canal, att_db):
-    #Configura a atenuação para um canal específico
-    if att_db in ATENUACAO_OPCOES:
-        rp_s.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
-        atenuacao[canal-1] = att_db
-        return True
-    else:
-        print(f"Atenuação {att_db}dB não suportada.")
-        return False
     
 start_time = time.time()
 next_acquisition = start_time
@@ -104,7 +81,7 @@ try:
     print("Digite 'rbw X' para alterar a RBW para X kHz (ex: 'rbw 10')")
     
     for ch in range:
-        set_attenuation(ch+1, atenuacao[ch])
+        rp_s.set_attenuation(ch+1, atenuacao[ch])
     
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
@@ -133,7 +110,7 @@ try:
                 axs_osc[ch].autoscale_view(True, True, True)
                 
                 # Atualiza spectrum analyzer com RBW atual
-                freq, fft_db, _ = calcular_fft(data, RBW)
+                freq, fft_db, _ = rpmath.calcular_fft(data, RBW)
                 lines_spec[ch].set_data(freq/1e6, fft_db)
                 axs_spec[ch].relim()
                 axs_spec[ch].autoscale_view(True, True, True)

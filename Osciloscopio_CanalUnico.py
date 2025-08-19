@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
-IP = '10.42.0.25'
+IP = '10.42.0.25' # SO Windows: 169.254.56.223 | SO Linux Ubuntu: 10.4.0.25
 rp_s = scpi.scpi(IP)
 
 #Parâmetros 
