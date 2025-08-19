@@ -77,6 +77,9 @@ start_time = time.time()
 next_acquisition = start_time
 
 try:
+    
+    set_attenuation(canal, atenuacao) # aplicação da atenuação
+    
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
             print(f"\nAquisição em {datetime.now().strftime('%H:%M:%S')} - RBW: {RBW/1e3:.1f} kHz")

@@ -75,7 +75,7 @@ def set_attenuation(channel, att_db):
         atenuacao[channel-1] = att_db
         return True
     else:
-        print(f"Atenuação {att_db}dB não suportada. Use {ATENUACAO_OPCOES}")
+        print(f"Atenuação {att_db}dB não suportada.")
         return False
 
 def atualizar_rbw(nova_rbw):

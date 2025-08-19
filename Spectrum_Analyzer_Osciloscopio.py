@@ -20,13 +20,17 @@ RBW = 100e3  # Resolution Bandwidth inicial (100 kHz)
 MIN_RBW = 1e3  # 1 kHz
 MAX_RBW = 1e6  # 1 MHz
 
+# Opções de atenuação (em dB)
+ATENUACAO_OPCOES = [0, 20]  # 0dB ou 20dB
+atenuacao = [0, 0, 0, 0]  # Atenuação inicial para cada canal [CH1, CH2, CH3, CH4]
+
 # Configuração inicial
 rp_s.__configure__()
 
 # Configuração da interface
 plt.ion()
 fig = plt.figure(figsize=(16, 12))
-fig.suptitle(f'Osciloscópio e Spectrum Analyzer - RBW: {RBW/1e3:.1f} kHz', fontsize=16)
+fig.suptitle(f'Osciloscópio e Spectrum Analyzer\nRBW: {RBW/1e3:.1f} kHz', fontsize=16)
 
 # Cria subplots para cada canal 
 axs_osc = []  # Para os gráficos do osciloscópio
@@ -82,6 +86,16 @@ def atualizar_rbw(nova_rbw):
     fig.suptitle(f'Osciloscópio e Spectrum Analyzer - RBW: {RBW/1e3:.1f} kHz', fontsize=16)
     print(f"\nRBW alterada para: {RBW/1e3:.1f} kHz")
 
+def set_attenuation(canal, att_db):
+    #Configura a atenuação para um canal específico
+    if att_db in ATENUACAO_OPCOES:
+        rp_s.tx_txt(f'ACQ:SOUR{canal}:GAIN {"LV" if att_db == 0 else "HV"}')
+        atenuacao[canal-1] = att_db
+        return True
+    else:
+        print(f"Atenuação {att_db}dB não suportada.")
+        return False
+    
 start_time = time.time()
 next_acquisition = start_time
 
@@ -89,8 +103,14 @@ try:
     print("Iniciando aquisição... Pressione Ctrl+C para parar")
     print("Digite 'rbw X' para alterar a RBW para X kHz (ex: 'rbw 10')")
     
+    for ch in range:
+        set_attenuation(ch+1, atenuacao[ch])
+    
     while time.time() - start_time < tempo_total_segundos:
         if time.time() >= next_acquisition:
+            
+            print(f"\n Aquisição em {datetime.now().strftime('%H:%M:%S')}")
+            
             # Configura trigger
             rp_s.tx_txt('ACQ:TRIG CH1_PE')
             rp_s.tx_txt('ACQ:START')
