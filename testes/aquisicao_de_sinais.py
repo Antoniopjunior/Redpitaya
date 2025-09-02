@@ -8,7 +8,7 @@ import os
 import pandas as pd
 from datetime import datetime
 
-IP = '169.254.56.223'
+IP = '169.254.56.25'
 rp_s = scpi.scpi(IP)
 
 # Parâmetros de aquisição

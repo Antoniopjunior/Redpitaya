@@ -1,6 +1,6 @@
 # Redpitaya
 
-Este projeto implementa um osciloscópio e analisador de espectro utilizando a placa Redítaya, controlando-a via interface SCPI e exibindo os resultados em tempo real atraés de gráficos em "tempo real".
+Este projeto implementa um osciloscópio e analisador de espectro utilizando a placa Redítaya, controlando-a via interface SCPI e exibindo os resultados em tempo real através de gráficos em "tempo real".
 
 ## 📋 Funcionalidades 
 * Osciloscópio em "tempo real": Visualização de sinais no domínio do tempo

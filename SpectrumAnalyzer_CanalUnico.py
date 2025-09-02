@@ -36,7 +36,7 @@ fig.suptitle(f'Spectrum Analyzer | Canal {canal}\nRBW: {RBW/1e3:.1f} kHz| Atenua
 line, = ax.plot([], [], 'b', label='Espectro')
 ax.set_xlim(0, sample_rate/2/1e6)  # MHz
 ax.set_xticks(np.arange(0, sample_rate/2/1e6, 5))
-ax.set_ylim(-80, 10)
+ax.set_ylim(-80, 80)
 ax.set_xlabel('Frequência (MHz)')
 ax.set_ylabel('Amplitude (dB)')
 ax.grid(True)

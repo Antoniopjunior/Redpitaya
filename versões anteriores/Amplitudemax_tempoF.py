@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
-IP = '169.254.56.223'
+IP = '10.42.0.25'
 rp_s = scpi.scpi(IP)
 
 # Parâmetros de aquisição
-tempo_total_segundos = 600
+tempo_total_segundos = 20
 intervalo_segundos = 5
 
 # Configuração inicial do Red Pitaya
