@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from datetime import datetime
 
-IP = '10.42.0.236'
+IP = '10.42.0.25'
 rp_s = scpi.scpi(IP)
 
 # Parâmetros
-tempo_total_segundos = 10
+tempo_total_segundos = 30
 intervalo_segundos = 1
 sample_rate = 125e6
 ts = 1 / sample_rate

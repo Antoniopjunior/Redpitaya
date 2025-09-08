@@ -4,7 +4,7 @@ import sys
 import time
 import redpitaya_scpi as scpi
 
-IP = '169.254.56.223'
+IP = '10.42.0.236'
 rp = scpi.scpi(IP)
 
 if (len(sys.argv) > 2):
