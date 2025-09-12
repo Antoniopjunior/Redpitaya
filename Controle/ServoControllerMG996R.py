@@ -2,10 +2,6 @@
 import redpitaya_scpi as scpi
 import time
 
-# CONFIGURAÇÃO DE SEGURANÇA CRÍTICA
-# ⚠️ NUNCA conecte o VCC (vermelho) do MG996R na Red Pitaya
-# ⚠️ Use obrigatoriamente uma fonte externa de 5-6V com capacidade mínima de 2A
-
 # Conexões corretas:
 # DIO -> Sinal (laranja) - Conectar na Pitaya
 # 5V-6V -> Potência (vermelho) - Conectar em FONTE EXTERNA
