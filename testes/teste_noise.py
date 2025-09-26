@@ -1,4 +1,5 @@
 import redpitaya_scpi as scpi
+import numpy as np
 import time
 import math
 
@@ -6,10 +7,8 @@ import math
 rp = scpi.scpi('10.42.0.25')  # IP da sua Red Pitaya
 
 # Configurações do servo
-SERVO_MIN_ANGLE = 0
-SERVO_MAX_ANGLE = 180
-SERVO_MIN_PULSE = 500
-SERVO_MAX_PULSE = 2500
+CENTER_ANGLE = 90
+MAX_ANGLE_RANGE = 30
 
 def read_single_value(canal):
     rp.tx_txt('ACQ:DEC 1')
@@ -30,10 +29,6 @@ def read_single_value(canal):
         return None
 
 def calculate_normalized_position(x_diff, y_diff, sum_signal):
-    """
-    Calcula a posição normalizada usando as saídas diferenciais do KPA101
-    XDiff e YDiff já são as diferenças (X+ - X-) e (Y+ - Y-)
-    """
     # Normaliza as diferenças pelo sinal total (SUM)
     if sum_signal > 0.1:  # Evita divisão por zero
         x_norm = x_diff / sum_signal
@@ -48,32 +43,38 @@ def calculate_normalized_position(x_diff, y_diff, sum_signal):
     
     return x_norm, y_norm
 
-def calculate_angle(x_norm, y_norm):
-    """
-    Calcula o ângulo com base nos valores normalizados X e Y
-    """
-    # Calcula o ângulo em radianos
-    angle_rad = math.atan2(y_norm, x_norm)
-        
-    # Converte para graus e ajusta para o range [0, 360]
-    angle_deg = math.degrees(angle_rad) % 360
+def calculate_servo_angles(x_norm, y_norm):
+    # Determina a direção predominante
+    x_direction = 1 if x_norm > 0.1 else (-1 if x_norm < -0.1 else 0)
+    y_direction = 1 if y_norm > 0.1 else (-1 if y_norm < -0.1 else 0)
     
-    # Mapeia para o range do servo (0-180 graus)
-    servo_angle = angle_deg / 2 if angle_deg <= 180 else (angle_deg - 180) / 2
+    # Caso 1: Feixe à direita (Q2/Q3)
+    if x_direction == 1 and abs(x_norm) > abs(y_norm):
+        servo_x_angle = CENTER_ANGLE + (abs(x_norm) * MAX_ANGLE_RANGE)
+        servo_y_angle = CENTER_ANGLE  # Mantém Y centralizado
     
-    return servo_angle
+    # Caso 2: Feixe à esquerda (Q1/Q4)  
+    elif x_direction == -1 and abs(x_norm) > abs(y_norm):
+        servo_x_angle = CENTER_ANGLE - (abs(x_norm) * MAX_ANGLE_RANGE)
+        servo_y_angle = CENTER_ANGLE
+    
+    # Caso 3: Feixe no topo (Q1/Q2)
+    elif y_direction == 1 and abs(y_norm) > abs(x_norm):
+        servo_x_angle = CENTER_ANGLE
+        servo_y_angle = CENTER_ANGLE + (abs(y_norm) * MAX_ANGLE_RANGE)
+    
+    # Caso 4: Feixe na base (Q3/Q4)
+    elif y_direction == -1 and abs(y_norm) > abs(x_norm):
+        servo_x_angle = CENTER_ANGLE
+        servo_y_angle = CENTER_ANGLE - (abs(y_norm) * MAX_ANGLE_RANGE)
+    
+    # Caso misto (diagonal)
+    else:
+        servo_x_angle = CENTER_ANGLE + (x_norm * MAX_ANGLE_RANGE * 0.7)
+        servo_y_angle = CENTER_ANGLE + (y_norm * MAX_ANGLE_RANGE * 0.7)
+    
+    return servo_x_angle, servo_y_angle
 
-def set_servo_angle(angle):
-    """
-    Simula o controle do servo (implemente conforme seu hardware)
-    """
-    pulse_width = SERVO_MIN_PULSE + (angle / SERVO_MAX_ANGLE) * (SERVO_MAX_PULSE - SERVO_MIN_PULSE)
-    print(f"Ângulo: {angle:.1f}° -> Pulso: {pulse_width:.0f}μs")
-
-# Mapeamento dos canais para o KPA101
-# CANAL 1: XDiff (saída diferencial X)
-# CANAL 2: YDiff (saída diferencial Y) 
-# CANAL 3: SUM (soma total)
 
 print("Lendo saídas do KPA101 (XDiff, YDiff, SUM). Ctrl+C para parar.")
 try:
