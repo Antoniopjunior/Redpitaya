@@ -1,7 +1,8 @@
 import redpitaya_scpi as scpi
 import numpy as np
 import time
-import math
+import threading
+
 
 # Configuração inicial
 rp = scpi.scpi('10.42.0.25')  # IP da sua Red Pitaya
@@ -9,6 +10,9 @@ rp = scpi.scpi('10.42.0.25')  # IP da sua Red Pitaya
 # Configurações do servo
 CENTER_ANGLE = 90
 MAX_ANGLE_RANGE = 30
+
+SERVO_PIN1 = 'DIO0_N'
+SERVO_PIN2 = 'DIO1_N'
 
 def read_single_value(canal):
     rp.tx_txt('ACQ:DEC 1')
@@ -75,6 +79,50 @@ def calculate_servo_angles(x_norm, y_norm):
     
     return servo_x_angle, servo_y_angle
 
+def config_pin(servo_pin1, servo_pin2):
+    rp.tx_txt(f'DIG:PIN:DIR OUT, {servo_pin1}')
+    rp.tx_txt(f'DIG:PIN {servo_pin1}, 0')
+    
+    rp.tx_txt(f'DIG:PIN:DIR OUT, {servo_pin2}')
+    rp.tx_txt(f'DIG:PIN {servo_pin2}, 0')
+    time.sleep(0.1)
+
+def move_servo_simultaneous(angle1, servo_pin1, angle2, servo_pin2):
+    if angle1 < 0 or angle1 > 180 or angle2 < 0 or angle2 > 180:
+        print("Erro: Ângulos devem estar entre 0 e 180 graus")
+    
+    # Cálculo dos pulsos para cada servo
+    pulse_width1 = 500 + (angle1 / 180.0) * 2000
+    pulse_width2 = 500 + (angle2 / 180.0) * 2000
+    
+    pulse_duration1 = pulse_width1 / 1000000.0
+    pulse_duration2 = pulse_width2 / 1000000.0
+    
+    print(f"Movendo servo 1 para {angle1}° ({pulse_width1}μs) e servo 2 para {angle2}° ({pulse_width2}μs)")
+    
+    # Função para mover um servo individualmente (com threads)
+    
+    def move_single_servo(angle, pin, pulse_duration):
+        rp.tx_txt(f'DIG:PIN {pin},1')
+        time.sleep(pulse_duration)
+        rp.tx_txt(f'DIG:PIN {pin},0')
+    
+    thread1 = threading.Thread(target=move_single_servo, args=(angle1, servo_pin1, pulse_duration1))
+    thread2 = threading.Thread(target=move_single_servo, args=(angle2, servo_pin2, pulse_duration2))
+    
+    thread1.start()
+    thread2.start()
+    
+    thread1.join()
+    thread2.join()
+    
+    remaining_time = 0.02 - max(pulse_duration1, pulse_duration2)
+    
+    if remaining_time > 0:
+        time.sleep(remaining_time)
+    
+    return True
+    
 
 print("Lendo saídas do KPA101 (XDiff, YDiff, SUM). Ctrl+C para parar.")
 try:
@@ -89,16 +137,19 @@ try:
             x_norm, y_norm = calculate_normalized_position(x_diff, y_diff, sum_signal)
             
             # Calcula o ângulo
-            angle = calculate_angle(x_norm, y_norm)
+            angle1, angle2 = calculate_servo_angles(x_norm, y_norm)
+            
+            if 0 <= angle1 <=180 and 0 <= angle2 <= 180:
+                for _ in range(50):
+                    move_servo_simultaneous(angle1, SERVO_PIN1, angle2, SERVO_PIN2)
             
             print(f"XDiff: {x_diff:.3f}V, YDiff: {y_diff:.3f}V")
             print(f"SUM: {sum_signal:.3f}V")
             print(f"XNorm: {x_norm:.3f}, YNorm: {y_norm:.3f}")
-            print(f"Ângulo: {angle:.1f}°")
+            print(f"Ângulo X: {angle1:.1f}°, Ângulo Y: {angle2:.1f}°")
             print("-" * 40)
             
-            # Controla o servo
-            set_servo_angle(angle)
+            
         
         time.sleep(0.5)
 
