@@ -8,12 +8,12 @@ import time
 # GND -> Solo (marrom)
 
 # Configuração
-IP = "10.42.0.236"  # IP da Red Pitaya
+IP = "10.42.0.25"  # IP da Red Pitaya
 rp = scpi.scpi(IP)
-SERVO_PIN = 'DIO0_N' # modificar dependendendo do pino 
+SERVO_PIN = 'DIO1_N' # modificar dependendendo do pino 
 
 # Configura o pino como saída
-rp.tx_txt(f'DIG:PIN:DIR OUT,{SERVO_PIN}')
+rp.tx_txt(f'DIG:PIN:DIR OUT, {SERVO_PIN}')
 rp.tx_txt(f'DIG:PIN {SERVO_PIN},0')
 time.sleep(0.1)
 

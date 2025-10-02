@@ -3,9 +3,11 @@ import numpy as np
 import time
 import threading
 
+# Para o detector do tipo PDQ30C garantir que o tamanho do feixe seja menor do que 0.5mm
 
 # Configuração inicial
-rp = scpi.scpi('10.42.0.25')  # IP da sua Red Pitaya
+IP = '10.42.0.25'
+rp = scpi.scpi(IP)  # IP da sua Red Pitaya
 
 # Configurações do servo
 CENTER_ANGLE = 90

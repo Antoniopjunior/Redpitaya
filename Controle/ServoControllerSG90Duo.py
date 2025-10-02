@@ -9,7 +9,7 @@ import threading
 # GND -> Solo (marrom)
 
 # Configuração
-IP = "10.42.0.236"  # IP da Red Pitaya
+IP = "10.42.0.25"  # IP da Red Pitaya
 rp = scpi.scpi(IP)
 SERVO_PIN1 = 'DIO0_N'
 SERVO_PIN2 = 'DIO1_N'
